@@ -1,62 +1,60 @@
 package org.adastraeducation.quiz;
 import java.io.*;
 import java.lang.reflect.*;
+import java.util.ArrayList;
 
 public class Quiz {
-	public static void testHTMLAndXML(StringBuilder html, StringBuilder xml) {
-		html.append
-			("!DOCTYPE html\n<html><body>");
-
-		xml.append
-			("<?xml version=\"1.0\" ?>");
-
-		MultiChoice.testHTMLAndXML(html, xml);
-		//		MultiAnswer.testHTMLAndXML(html, xml);
-		// Equation.testHTMLAndXML(html, xml);
-		html.append
-			("</body></html>");
+	private ArrayList<Question> questions;
+	
+	public Quiz() {
+		questions = new ArrayList<Question>();
 	}
-
-	public static void main(String []args){
-		StringBuilder html = new StringBuilder();
-		StringBuilder xml = new StringBuilder();
-		// first conduct unit test for each class
-		try {
-			String[] classes = {"MultiChoice" } ;//, "MultiAnswer"
-			for (String className : classes) {
-				Class c = Class.forName("org.adastraeducation.quiz." + className);
-				//Method[] allMethods = c.getDeclaredMethods();
-				Method m = c.getMethod("testHTMLAndXML", StringBuilder.class, StringBuilder.class);
-				//Method m  = c.getMethod("testHTMLAndXML", new Object[] {StringBuilder.class, StringBuilder.class})
-				//for (Method m : allMethods) {
-					System.out.println(m.getName());
-				//}
-				//				c.execute(m, html, xml);
-				m.invoke(c, new Object[]{html, xml});
-				try {
-		 			PrintWriter pw = new PrintWriter("html/" + className + ".html");
-		 			pw.println(html);
-					pw.close();
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-				}
-				try {
-					PrintWriter pw = new PrintWriter("html/" + className + ".xml");
-					pw.println(xml);
-					pw.close();
-				} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}			
-			}
-		} catch (Exception e) {
-				e.printStackTrace(); // class not found? Some other problem?
+	
+	/*
+	 * Write out the HTML for a quiz.  The quiz is in charge of 
+	 * generating the form, and making sure that each question 
+	 * knows its unique name (could be q1, q2, q3...)
+	 */
+	
+	public void writeHTML(StringBuilder b) {
+		b.append("<form method=\"get\" action=\"somewhere\"");
+		// this is the new iteration style, you can use either.
+		//for(Question q : questions) {
+		//	q.writeHTML(b);
+		//}
+		
+		for(int i = 0; i < questions.size(); i++) {
+			questions.get(i).writeHTML(b);
 		}
+		b.append("</form>\n");
+	}
+	
+	/*
+	 * Write out the XML to represent an entire quiz
+	 * This is not for display, just to save for purposes of export to other systems
+	 * or backup.
+	 */
+	public void writeXML(StringBuilder b) {
+		b.append("<Quiz>");
+		for(Question q : questions) {
+			q.writeXML(b);
+		}
+		
+		b.append("</Quiz>");
+	}
+	
+	public void addQuestion(Question q) {
+		questions.add(q);
+		q.setName("q" + questions.size());
+	}
+	
+	private void writeHTML(String filename) {
+		StringBuilder html = new StringBuilder();
 
-		html.setLength(0);
-		xml.setLength(0);
-		//now clear and create unit test with quiz for everyone 
-		testHTMLAndXML(html, xml);
+		html.append("<!DOCTYPE html>\n<html><body>");
+		writeHTML(html);
+		html.append("</body></html>");
+
 		try {
  			PrintWriter pw = new PrintWriter("html/quiz.html");
  			pw.println(html);
@@ -64,13 +62,51 @@ public class Quiz {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private void writeXML(String filename) {
+		StringBuilder xml = new StringBuilder();
+		xml.append("<?xml version=\"1.0\" ?>");
+		writeXML(xml);
 		try {
-			PrintWriter pw = new PrintWriter("html/question.xml");
+			PrintWriter pw = new PrintWriter("html/quiz.xml");
 			pw.println(xml);
 			pw.close();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	private static void testAllQuestionsTogether() {
+		Quiz quiz = new Quiz();
+		MultiChoice.testHTMLAndXML(quiz);
+		FillIn.testHTMLAndXML(quiz);
+		//Match.testHTMLAndXML(quiz);
+		//MultiAnswer.testHTMLAndXML(quiz);
+		// Equation.testHTMLAndXML(quiz);
+		quiz.writeHTML("quiz.html");
+		quiz.writeXML("quiz.xml");
+	}
+	public static void testQuestionsForEachClass() {
+		// first conduct unit test for each class
+		try {		
+			String[] classes = {"MultiChoice", "FillIn"} ;//, "MultiAnswer"
+			for (String className : classes) {
+				Quiz quiz = new Quiz();
+				Class c = Class.forName("org.adastraeducation.quiz." + className);
+				Method m = c.getMethod("testHTMLAndXML", Quiz.class);
+				m.invoke(c, new Object[]{quiz});
+				quiz.writeHTML("html/" + c.getName() + ".html");
+				quiz.writeXML("html/" + c.getName() + ".xml");
+			}
+		} catch (Exception e) {
+				e.printStackTrace(); // class not found? Some other problem?
+		}		
+	}
+
+	public static void main(String []args){	
+		testAllQuestionsTogether();
+		testQuestionsForEachClass();
 	}
 }
