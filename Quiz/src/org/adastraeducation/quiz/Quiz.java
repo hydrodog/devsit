@@ -56,7 +56,7 @@ public class Quiz {
 		html.append("</body></html>");
 
 		try {
- 			PrintWriter pw = new PrintWriter("html/quiz.html");
+ 			PrintWriter pw = new PrintWriter("html/" + filename);
  			pw.println(html);
 			pw.close();
 		} catch (FileNotFoundException e) {
@@ -69,7 +69,7 @@ public class Quiz {
 		xml.append("<?xml version=\"1.0\" ?>");
 		writeXML(xml);
 		try {
-			PrintWriter pw = new PrintWriter("html/quiz.xml");
+			PrintWriter pw = new PrintWriter("html/" + filename);
 			pw.println(xml);
 			pw.close();
 		} catch (FileNotFoundException e) {
@@ -97,8 +97,8 @@ public class Quiz {
 				Class c = Class.forName("org.adastraeducation.quiz." + className);
 				Method m = c.getMethod("testHTMLAndXML", Quiz.class);
 				m.invoke(c, new Object[]{quiz});
-				quiz.writeHTML("html/" + c.getName() + ".html");
-				quiz.writeXML("html/" + c.getName() + ".xml");
+				quiz.writeHTML(c.getName() + ".html");
+				quiz.writeXML(c.getName() + ".xml");
 			}
 		} catch (Exception e) {
 				e.printStackTrace(); // class not found? Some other problem?
